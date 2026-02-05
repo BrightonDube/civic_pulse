@@ -1,44 +1,50 @@
 # CivicPulse
 
-AI-powered infrastructure issue reporting platform that allows citizens to instantly report infrastructure issues with a photo and GPS pin.
+Infrastructure issue reporting platform with a FastAPI backend and React frontend.
 
 ## Project Structure
 
 ```
-civic-pulse/
-├── backend/          # FastAPI backend
-│   ├── app/         # Application code
-│   ├── alembic/     # Database migrations
-│   └── tests/       # Backend tests
-└── frontend/        # React TypeScript frontend
-    └── src/         # Frontend source code
+civic_pulse/
+  backend/       FastAPI backend
+  frontend/      React + TypeScript frontend
 ```
 
 ## Quick Start
 
-### Backend
+Backend:
 ```bash
 cd backend
 python -m venv venv
-venv\Scripts\activate  # Windows
+venv\Scripts\activate
 pip install -r requirements.txt
+copy .env.example .env
 uvicorn app.main:app --reload
 ```
 
-### Frontend
+Frontend:
 ```bash
 cd frontend
+copy .env.example .env
 npm install
 npm run dev
 ```
 
-## Documentation
+## Local URLs
 
-- Backend API: http://localhost:8000/docs
-- Frontend: http://localhost:5173
+- Backend API docs: http://localhost:8000/docs
+- Frontend app: http://localhost:5173
 
----
+## Platform Features Added
 
-## Brighton Dube's Favourite Quote
+- Structured API routes for health and issues
+- Database model and Pydantic schemas for issues
+- Service layer for issue creation and listing
+- Frontend API client with environment config
+- Navigation shell, error boundary, and basic styling
 
-> "Progress is built on small acts done consistently — especially the ones no one asked you to do."
+## Next Improvements
+
+- Add authentication and role-based access
+- Add issue status updates and admin workflows
+- Add database migrations for new tables
