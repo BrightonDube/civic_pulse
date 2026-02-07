@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import { Workbox } from 'workbox-window';
 import "leaflet/dist/leaflet.css";
+import "./index.css";
 
 if ('serviceWorker' in navigator) {
   const wb = new Workbox('/sw.js');
