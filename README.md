@@ -35,6 +35,19 @@ npm run dev
 - Backend API docs: http://localhost:8000/docs
 - Frontend app: http://localhost:5173
 
+## Database Migrations (Alembic)
+
+From `backend/`:
+```bash
+# Create a new migration after model changes
+alembic revision --autogenerate -m "describe change"
+
+# Apply latest migrations
+alembic upgrade head
+```
+
+Make sure `DATABASE_URL` in `backend/.env` points to your local database.
+
 ## Platform Features Added
 
 - Structured API routes for health and issues
@@ -47,4 +60,3 @@ npm run dev
 
 - Add authentication and role-based access
 - Add issue status updates and admin workflows
-- Add database migrations for new tables
