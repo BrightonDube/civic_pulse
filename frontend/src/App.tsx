@@ -1,12 +1,17 @@
-import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "./routes/AppRoutes";
+import { useEffect } from "react";
+import { syncDrafts } from "./services/sync";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
 
-function App() {
-  return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
-  );
+function App({ children }: { children: React.ReactNode }) {
+  const isOnline = useOnlineStatus();
+
+  useEffect(() => {
+    if (isOnline) {
+      syncDrafts();
+    }
+  }, [isOnline]);
+
+  return <>{children}</>;
 }
 
 export default App;
