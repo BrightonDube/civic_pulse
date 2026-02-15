@@ -3,6 +3,9 @@ import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  define: {
+    "globalThis.__VITE_API_URL__": JSON.stringify(process.env.VITE_API_URL || ""),
+  },
   plugins: [
     react(),
     VitePWA({
