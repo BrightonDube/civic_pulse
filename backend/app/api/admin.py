@@ -3,7 +3,7 @@ Admin API endpoints for report management.
 
 Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7
 """
-import uuid as _uuid
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -80,7 +80,7 @@ async def update_status(
 ):
     """Update report status (admin only). Requirements: 9.2"""
     try:
-        rid = _uuid.UUID(report_id)
+        rid = uuid.UUID(report_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid report ID")
 
@@ -107,7 +107,7 @@ def add_note(
 ):
     """Add internal note to report (admin only). Requirements: 9.3"""
     try:
-        rid = _uuid.UUID(report_id)
+        rid = uuid.UUID(report_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid report ID")
 
@@ -134,7 +134,7 @@ def override_category(
 ):
     """Override report category (admin only). Requirements: 9.4"""
     try:
-        rid = _uuid.UUID(report_id)
+        rid = uuid.UUID(report_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid report ID")
 
@@ -158,7 +158,7 @@ def adjust_severity(
 ):
     """Adjust report severity (admin only). Requirements: 9.5"""
     try:
-        rid = _uuid.UUID(report_id)
+        rid = uuid.UUID(report_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid report ID")
 
@@ -181,7 +181,7 @@ def archive_report(
 ):
     """Archive a report (admin only). Requirements: 9.6"""
     try:
-        rid = _uuid.UUID(report_id)
+        rid = uuid.UUID(report_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid report ID")
 
@@ -200,7 +200,7 @@ def get_audit_log(
 ):
     """Get audit trail for a report (admin only). Requirements: 9.7"""
     try:
-        rid = _uuid.UUID(report_id)
+        rid = uuid.UUID(report_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid report ID")
 
@@ -227,7 +227,7 @@ def get_notes(
 ):
     """Get admin notes for a report (admin only). Requirements: 9.3"""
     try:
-        rid = _uuid.UUID(report_id)
+        rid = uuid.UUID(report_id)
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid report ID")
 

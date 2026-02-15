@@ -47,8 +47,11 @@ class ReportService:
         # Save photo to filesystem
         photo_filename = f"{uuid.uuid4()}.jpg"
         photo_path = os.path.join(UPLOAD_DIR, photo_filename)
-        with open(photo_path, "wb") as f:
-            f.write(photo_bytes)
+        try:
+            with open(photo_path, "wb") as f:
+                f.write(photo_bytes)
+        except OSError as e:
+            raise RuntimeError(f"Failed to save photo: {e}") from e
 
         photo_url = f"/uploads/{photo_filename}"
 
