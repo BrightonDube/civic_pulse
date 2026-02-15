@@ -15,6 +15,7 @@ from app.models.user import User
 from app.schemas.report import ReportResponse, ReportCategoryUpdate, severity_to_color
 from app.services.report_service import ReportService
 from app.services.gps_service import extract_gps_from_exif
+from app.services.ai_service import AIService
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
@@ -69,7 +70,15 @@ async def create_report(
     if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
         raise HTTPException(status_code=400, detail="Invalid GPS coordinates")
 
-    category = user_override_category or "Other"
+    # AI analysis (Req 2.1, 2.5)
+    ai_service = AIService()
+    analysis = ai_service.analyze_image(photo_bytes)
+
+    # User override takes priority (Req 2.6)
+    category = user_override_category or analysis.category
+    severity_score = analysis.severity_score
+    ai_generated = analysis.ai_generated and (user_override_category is None)
+
     service = ReportService(db)
     report = service.create_report(
         user_id=current_user.id,
@@ -77,8 +86,8 @@ async def create_report(
         latitude=latitude,
         longitude=longitude,
         category=category,
-        severity_score=5,
-        ai_generated=False,
+        severity_score=severity_score,
+        ai_generated=ai_generated,
     )
     return _report_to_response(report)
 
