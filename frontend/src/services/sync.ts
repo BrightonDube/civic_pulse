@@ -14,8 +14,8 @@ export async function syncDrafts() {
 
       await createReport(formData);
       await deleteDraft(draft.id);
-    } catch {
-      // Will retry on next sync
+    } catch (err) {
+      console.warn("Draft sync failed, will retry on next cycle:", err);
     }
   }
 }

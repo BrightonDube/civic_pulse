@@ -3,11 +3,14 @@ Service for GPS extraction from EXIF metadata.
 
 Requirements: 1.1, 1.2
 """
+import logging
 from typing import Optional, Tuple
 import io
 
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
+
+logger = logging.getLogger(__name__)
 
 
 def _get_gps_info(image: Image.Image) -> Optional[dict]:
@@ -65,5 +68,6 @@ def extract_gps_from_exif(photo_bytes: bytes) -> Optional[Tuple[float, float]]:
             longitude = -longitude
 
         return (latitude, longitude)
-    except Exception:
+    except (OSError, SyntaxError, ValueError) as e:
+        logger.debug("Failed to extract GPS from EXIF: %s", e)
         return None
