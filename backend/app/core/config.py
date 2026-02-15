@@ -5,6 +5,7 @@ from pydantic import ConfigDict
 class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://user:password@localhost:5432/civicpulse"
     SECRET_KEY: str = "dev-secret-key"
+    OPENAI_API_KEY: str = ""
     
     model_config = ConfigDict(env_file=".env")
 
