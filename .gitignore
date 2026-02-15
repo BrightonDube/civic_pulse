@@ -215,6 +215,7 @@ __marimo__/
 # Never commit Markdown docs (except README.md)
 *.md
 !README.md
+!Project_requirements.md
 
 # ------------------------------------------------------------
 # Frontend (React/TypeScript) common ignores
