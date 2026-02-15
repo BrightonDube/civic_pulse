@@ -15,17 +15,35 @@ export const Home = () => {
   }, []);
 
   const handleReportCreated = (report: Report) => {
-    setReports((prev) => [...prev, report]);
+    setReports((prev) => [report, ...prev]);
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <OfflineBanner />
-      <h1 className="text-2xl font-bold mb-4">Report an Issue</h1>
-      <PhotoCapture onReportCreated={handleReportCreated} />
-      <div className="mt-6">
-        <h2 className="text-xl font-semibold mb-2">Nearby Reports</h2>
-        <AdminMap filters={{ category: "", status: "", date: "" }} externalReports={reports} />
+
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Report an Issue</h1>
+        <p className="mt-1 text-gray-500">Snap a photo of infrastructure problems in your area</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <PhotoCapture onReportCreated={handleReportCreated} />
+        </div>
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                <span>📍</span> Nearby Reports
+                <span className="ml-auto text-sm font-normal text-gray-400">{reports.length} total</span>
+              </h2>
+            </div>
+            <div className="h-[500px]">
+              <AdminMap filters={{ category: "", status: "", date: "" }} externalReports={reports} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
