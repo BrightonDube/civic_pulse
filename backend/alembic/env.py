@@ -8,6 +8,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.database import Base
 from app.core.config import settings
+# Import all models so they're registered with Base.metadata
+from app.models import User
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
