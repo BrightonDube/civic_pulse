@@ -43,7 +43,7 @@ class ReportCreate(BaseModel):
 
 
 class ReportResponse(BaseModel):
-    """Schema for report response."""
+    """Schema for report response. Property 9: Report Detail Completeness."""
     id: str
     user_id: str
     photo_url: str
@@ -51,6 +51,7 @@ class ReportResponse(BaseModel):
     longitude: float
     category: str
     severity_score: int
+    color: str = "green"
     status: str
     upvote_count: int
     ai_generated: bool

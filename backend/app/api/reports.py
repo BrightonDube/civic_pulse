@@ -30,6 +30,7 @@ def _report_to_response(report) -> ReportResponse:
         longitude=report.longitude,
         category=report.category,
         severity_score=report.severity_score,
+        color=severity_to_color(report.severity_score),
         status=report.status,
         upvote_count=report.upvote_count,
         ai_generated=report.ai_generated,
@@ -103,12 +104,27 @@ async def create_report(
 def list_reports(
     category: Optional[str] = None,
     report_status: Optional[str] = None,
+    date_from: Optional[str] = None,
+    date_to: Optional[str] = None,
+    min_lat: Optional[float] = None,
+    max_lat: Optional[float] = None,
+    min_lon: Optional[float] = None,
+    max_lon: Optional[float] = None,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get all reports with optional filters."""
+    """Get all reports with optional filters. Property 10 (Req 3.5)"""
+    from datetime import datetime
+    d_from = datetime.fromisoformat(date_from) if date_from else None
+    d_to = datetime.fromisoformat(date_to) if date_to else None
+
     service = ReportService(db)
-    reports = service.get_reports_filtered(category=category, status=report_status)
+    reports = service.get_reports_filtered(
+        category=category, status=report_status,
+        date_from=d_from, date_to=d_to,
+        min_lat=min_lat, max_lat=max_lat,
+        min_lon=min_lon, max_lon=max_lon,
+    )
     return [_report_to_response(r) for r in reports]
 
 
