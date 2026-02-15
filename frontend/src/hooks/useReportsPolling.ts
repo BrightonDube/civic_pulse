@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useReports } from "../context/ReportContext";
-import axios from "axios";
+import { listReports } from "../services/api";
 
 export const useReportsPolling = (interval = 5000) => {
   const { addReport } = useReports();
@@ -8,10 +8,10 @@ export const useReportsPolling = (interval = 5000) => {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const res = await axios.get("/api/reports"); // Backend endpoint
-        res.data.forEach((report: any) => addReport(report));
-      } catch (err) {
-        console.error("Failed to fetch reports", err);
+        const reports = await listReports();
+        reports.forEach((report) => addReport(report));
+      } catch {
+        // Silently fail when offline or unauthenticated
       }
     };
 
