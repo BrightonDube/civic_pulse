@@ -114,8 +114,17 @@ class ReportService:
         category: Optional[str] = None,
         status: Optional[str] = None,
         include_archived: bool = False,
+        date_from: Optional[datetime] = None,
+        date_to: Optional[datetime] = None,
+        min_lat: Optional[float] = None,
+        max_lat: Optional[float] = None,
+        min_lon: Optional[float] = None,
+        max_lon: Optional[float] = None,
     ) -> List[Report]:
-        """Get reports with optional filters."""
+        """
+        Get reports with optional filters including date range and bounding box.
+        Property 10: Report Filtering (Req 3.5)
+        """
         query = self.db.query(Report)
 
         if not include_archived:
@@ -124,6 +133,18 @@ class ReportService:
             query = query.filter(Report.category == category)
         if status:
             query = query.filter(Report.status == status)
+        if date_from:
+            query = query.filter(Report.created_at >= date_from)
+        if date_to:
+            query = query.filter(Report.created_at <= date_to)
+        if min_lat is not None:
+            query = query.filter(Report.latitude >= min_lat)
+        if max_lat is not None:
+            query = query.filter(Report.latitude <= max_lat)
+        if min_lon is not None:
+            query = query.filter(Report.longitude >= min_lon)
+        if max_lon is not None:
+            query = query.filter(Report.longitude <= max_lon)
 
         return query.order_by(Report.created_at.desc()).all()
 

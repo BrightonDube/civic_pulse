@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user, require_admin
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.report import ReportResponse
+from app.schemas.report import ReportResponse, severity_to_color
 from app.services.admin_service import AdminService
 
 router = APIRouter(prefix="/api/admin/reports", tags=["Admin"])
@@ -60,6 +60,7 @@ def _report_to_response(report) -> ReportResponse:
         longitude=report.longitude,
         category=report.category,
         severity_score=report.severity_score,
+        color=severity_to_color(report.severity_score),
         status=report.status,
         upvote_count=report.upvote_count,
         ai_generated=report.ai_generated,
