@@ -10,8 +10,9 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.models.report import Report, VALID_CATEGORIES
+from app.models.report import Report, VALID_CATEGORIES, VALID_STATUSES
 from app.models.upvote import Upvote
+from app.models.status_history import StatusHistory
 
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
@@ -156,5 +157,48 @@ class ReportService:
         return (
             self.db.query(Upvote)
             .filter(Upvote.report_id == report_id)
+            .all()
+        )
+
+    def update_status(
+        self, report_id: uuid.UUID, new_status: str, changed_by: uuid.UUID
+    ) -> Optional[Report]:
+        """
+        Update report status and create history entry.
+        Property 12: Status Update Persistence
+        Property 14: Status History Logging
+        Requirements: 4.2, 4.6
+        """
+        if new_status not in VALID_STATUSES:
+            raise ValueError(f"Invalid status: {new_status}")
+
+        report = self.get_report(report_id)
+        if not report:
+            return None
+
+        old_status = report.status
+        if old_status == new_status:
+            return report
+
+        history = StatusHistory(
+            report_id=report_id,
+            old_status=old_status,
+            new_status=new_status,
+            changed_by=changed_by,
+        )
+        self.db.add(history)
+
+        report.status = new_status
+        report.updated_at = datetime.now(timezone.utc)
+        self.db.commit()
+        self.db.refresh(report)
+        return report
+
+    def get_status_history(self, report_id: uuid.UUID) -> List[StatusHistory]:
+        """Get full status history for a report. Requirements: 4.6"""
+        return (
+            self.db.query(StatusHistory)
+            .filter(StatusHistory.report_id == report_id)
+            .order_by(StatusHistory.changed_at.asc())
             .all()
         )
