@@ -6,6 +6,13 @@ export default defineConfig({
   define: {
     "globalThis.__VITE_API_URL__": JSON.stringify(process.env.VITE_API_URL || ""),
   },
+  server: {
+    proxy: {
+      "/api": "http://localhost:8000",
+      "/ws": { target: "ws://localhost:8000", ws: true },
+      "/uploads": "http://localhost:8000",
+    },
+  },
   plugins: [
     react(),
     VitePWA({
