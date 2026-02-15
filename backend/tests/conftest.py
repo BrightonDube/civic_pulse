@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from app.core.database import Base, get_db
 from app.main import app
-from app.models import User, Report, Upvote, StatusHistory  # noqa: F401 - ensure all models are registered
+from app.models import User, Report, Upvote, StatusHistory, AdminNote, AuditLog  # noqa: F401
 
 # Single shared engine for all tests - ensures TestClient and tests see same data
 _test_engine = create_engine(
