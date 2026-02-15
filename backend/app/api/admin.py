@@ -14,6 +14,7 @@ from app.core.database import get_db
 from app.models.user import User
 from app.schemas.report import ReportResponse, severity_to_color
 from app.services.admin_service import AdminService
+from app.services.websocket_manager import manager
 
 router = APIRouter(prefix="/api/admin/reports", tags=["Admin"])
 
@@ -71,7 +72,7 @@ def _report_to_response(report) -> ReportResponse:
 
 
 @router.post("/{report_id}/status", response_model=ReportResponse)
-def update_status(
+async def update_status(
     report_id: str,
     data: StatusUpdateRequest,
     admin: User = Depends(require_admin),
@@ -91,7 +92,10 @@ def update_status(
 
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
-    return _report_to_response(report)
+    response = _report_to_response(report)
+    # Broadcast status change via WebSocket (Req 7.5)
+    await manager.broadcast({"event": "status_change", "data": response.model_dump(mode="json")})
+    return response
 
 
 @router.post("/{report_id}/notes", response_model=NoteResponse)

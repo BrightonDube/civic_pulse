@@ -8,6 +8,7 @@ from app.api.auth import router as auth_router
 from app.api.reports import router as reports_router
 from app.api.admin import router as admin_router
 from app.api.leaderboard import router as leaderboard_router
+from app.api.ws import router as ws_router
 
 limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 
@@ -32,6 +33,7 @@ app.include_router(auth_router)
 app.include_router(reports_router)
 app.include_router(admin_router)
 app.include_router(leaderboard_router)
+app.include_router(ws_router)
 
 
 @app.get("/")
