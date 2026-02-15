@@ -16,6 +16,7 @@ from app.schemas.report import ReportResponse, ReportCategoryUpdate, severity_to
 from app.services.report_service import ReportService
 from app.services.gps_service import extract_gps_from_exif
 from app.services.ai_service import AIService
+from app.services.duplicate_service import DuplicateDetectionService
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
@@ -78,6 +79,12 @@ async def create_report(
     category = user_override_category or analysis.category
     severity_score = analysis.severity_score
     ai_generated = analysis.ai_generated and (user_override_category is None)
+
+    # Duplicate detection (Req 5.1, 5.2)
+    dup_service = DuplicateDetectionService(db)
+    duplicate = dup_service.check_for_duplicates(latitude, longitude, category)
+    if duplicate:
+        return _report_to_response(duplicate)
 
     service = ReportService(db)
     report = service.create_report(
@@ -159,3 +166,40 @@ def update_category(
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
     return _report_to_response(report)
+
+
+@router.post("/{report_id}/upvote", response_model=ReportResponse)
+def upvote_report(
+    report_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Upvote a report. Idempotent. Requirements: 5.3, 5.6"""
+    import uuid as _uuid
+    try:
+        rid = _uuid.UUID(report_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid report ID")
+
+    service = ReportService(db)
+    report = service.add_upvote(rid, current_user.id)
+    if not report:
+        raise HTTPException(status_code=404, detail="Report not found")
+    return _report_to_response(report)
+
+
+@router.get("/nearby", response_model=list[ReportResponse])
+def find_nearby_reports(
+    latitude: float,
+    longitude: float,
+    radius: float = 50.0,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Find reports near a location. Requirements: 5.1"""
+    if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
+        raise HTTPException(status_code=400, detail="Invalid GPS coordinates")
+
+    dup_service = DuplicateDetectionService(db)
+    reports = dup_service.find_nearby_reports(latitude, longitude, radius)
+    return [_report_to_response(r) for r in reports]

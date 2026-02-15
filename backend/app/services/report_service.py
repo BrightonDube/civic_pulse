@@ -11,6 +11,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.report import Report, VALID_CATEGORIES
+from app.models.upvote import Upvote
 
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
@@ -124,3 +125,36 @@ class ReportService:
             query = query.filter(Report.status == status)
 
         return query.order_by(Report.created_at.desc()).all()
+
+    def add_upvote(self, report_id: uuid.UUID, user_id: uuid.UUID) -> Optional[Report]:
+        """
+        Upvote a report. Idempotent: duplicate upvotes are ignored.
+        Property 17: Upvote Idempotency
+        Requirements: 5.3, 5.6
+        """
+        report = self.get_report(report_id)
+        if not report:
+            return None
+
+        existing = (
+            self.db.query(Upvote)
+            .filter(Upvote.report_id == report_id, Upvote.user_id == user_id)
+            .first()
+        )
+        if existing:
+            return report  # Already upvoted, idempotent
+
+        upvote = Upvote(report_id=report_id, user_id=user_id)
+        self.db.add(upvote)
+        report.upvote_count += 1
+        self.db.commit()
+        self.db.refresh(report)
+        return report
+
+    def get_upvoters(self, report_id: uuid.UUID) -> List:
+        """Get all users who upvoted a report (for notifications). Req 5.4"""
+        return (
+            self.db.query(Upvote)
+            .filter(Upvote.report_id == report_id)
+            .all()
+        )
