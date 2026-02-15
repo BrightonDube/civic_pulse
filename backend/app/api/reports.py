@@ -17,6 +17,7 @@ from app.services.report_service import ReportService
 from app.services.gps_service import extract_gps_from_exif
 from app.services.ai_service import AIService
 from app.services.duplicate_service import DuplicateDetectionService
+from app.services.websocket_manager import manager
 
 router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
@@ -97,7 +98,10 @@ async def create_report(
         severity_score=severity_score,
         ai_generated=ai_generated,
     )
-    return _report_to_response(report)
+    response = _report_to_response(report)
+    # Broadcast new report via WebSocket (Req 3.6)
+    await manager.broadcast({"event": "new_report", "data": response.model_dump(mode="json")})
+    return response
 
 
 @router.get("/", response_model=list[ReportResponse])
