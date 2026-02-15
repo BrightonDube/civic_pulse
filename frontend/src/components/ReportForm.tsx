@@ -38,45 +38,48 @@ export const ReportForm = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="max-w-md mx-auto p-4 border rounded-md shadow-md"
+      className="max-w-md mx-auto bg-white rounded-2xl shadow-md border border-gray-100 p-6"
     >
-      <h2 className="text-xl font-bold mb-4">Submit a Report</h2>
+      <h2 className="text-xl font-bold text-gray-900 mb-4">Submit a Report</h2>
 
       {message && (
-        <div className="bg-blue-100 text-blue-700 px-4 py-2 rounded mb-3">
+        <div className={`flex items-center gap-2 px-4 py-3 rounded-xl mb-4 text-sm ${
+          message.includes("failed") ? "bg-red-50 border border-red-200 text-red-700" : "bg-blue-50 border border-blue-200 text-blue-700"
+        }`}>
           {message}
         </div>
       )}
 
-      <label className="block mb-2">
-        Category*
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Category *</label>
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full border p-2 rounded"
+          className="block w-full px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
         >
           <option value="">Select category</option>
-          <option value="Pothole">Pothole</option>
-          <option value="Water Leak">Water Leak</option>
-          <option value="Vandalism">Vandalism</option>
-          <option value="Broken Light">Broken Light</option>
-          <option value="Other">Other</option>
+          <option value="Pothole">🕳️ Pothole</option>
+          <option value="Water Leak">💧 Water Leak</option>
+          <option value="Vandalism">🎨 Vandalism</option>
+          <option value="Broken Light">💡 Broken Light</option>
+          <option value="Other">📋 Other</option>
         </select>
-      </label>
+      </div>
 
-      <label className="block mb-2">
-        Description
+      <div className="mb-5">
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full border p-2 rounded"
+          className="block w-full px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+          rows={3}
         />
-      </label>
+      </div>
 
       <button
         type="submit"
         disabled={submitting}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
       >
         {submitting ? "Submitting..." : "Submit"}
       </button>

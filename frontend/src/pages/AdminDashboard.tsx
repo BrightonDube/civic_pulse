@@ -23,11 +23,20 @@ export const AdminDashboard = () => {
   }, [filters.category, filters.status]);
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <OfflineBanner />
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <span>🛡️</span> Admin Dashboard
+        </h1>
+        <p className="mt-1 text-gray-500">{reports.length} reports found</p>
+      </div>
       <Filters filters={filters} setFilters={setFilters} />
-      <AdminMap filters={filters} externalReports={reports} />
+      <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden">
+        <div className="h-[600px]">
+          <AdminMap filters={filters} externalReports={reports} />
+        </div>
+      </div>
     </div>
   );
 };
