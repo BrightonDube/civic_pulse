@@ -1,18 +1,17 @@
-import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "./routes/AppRoutes";
-import AppShell from "./components/AppShell";
-import ErrorBoundary from "./components/ErrorBoundary";
+import { useEffect } from "react";
+import { syncDrafts } from "./services/sync";
+import { useOnlineStatus } from "./hooks/useOnlineStatus";
 
-function App() {
-  return (
-    <BrowserRouter>
-      <ErrorBoundary>
-        <AppShell>
-          <AppRoutes />
-        </AppShell>
-      </ErrorBoundary>
-    </BrowserRouter>
-  );
+function App({ children }: { children: React.ReactNode }) {
+  const isOnline = useOnlineStatus();
+
+  useEffect(() => {
+    if (isOnline) {
+      syncDrafts();
+    }
+  }, [isOnline]);
+
+  return <>{children}</>;
 }
 
 export default App;

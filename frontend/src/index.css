@@ -1,55 +1,9 @@
-:root {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #0f172a;
-  background-color: #f8fafc;
-}
+@import "tailwindcss";
 
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-.app-shell {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 24px;
-  background: #1e293b;
-  color: #f8fafc;
-}
-
-.app-header nav {
-  display: flex;
-  gap: 16px;
-}
-
-.app-header a {
-  color: #cbd5f5;
-  text-decoration: none;
-}
-
-.app-header a.active {
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.app-main {
-  flex: 1;
-  padding: 24px;
-}
-
-.error-state,
-.loading {
-  padding: 24px;
-  background: #fee2e2;
-  border-radius: 8px;
+/* Global base styles */
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
 }

@@ -1,19 +1,24 @@
+import os
+import logging
+
 from pydantic_settings import BaseSettings
-from pydantic import Field
+from pydantic import ConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql://user:password@localhost:5432/civicpulse"
-    SECRET_KEY: str = "dev-secret-key"
-    ENV: str = "development"
-    DEBUG: bool = True
-    LOG_LEVEL: str = "INFO"
-    CORS_ORIGINS: list[str] = Field(
-        default_factory=lambda: ["http://localhost:5173", "http://localhost:4173"]
-    )
-
-    class Config:
-        env_file = ".env"
+    DATABASE_URL: str = "sqlite:///./civicpulse_dev.db"
+    SECRET_KEY: str = "change-me-in-production"
+    OPENAI_API_KEY: str = ""
+    
+    model_config = ConfigDict(env_file=".env")
 
 
 settings = Settings()
+
+if os.getenv("ENV", "development") == "production":
+    if settings.SECRET_KEY == "change-me-in-production":
+        raise RuntimeError("SECRET_KEY must be set in production")
+    if "sqlite" in settings.DATABASE_URL:
+        logger.warning("Using SQLite in production is not recommended")
