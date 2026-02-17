@@ -1,7 +1,7 @@
 """
 AI Vision API integration service.
 
-Sends images to OpenAI Vision API for category/severity analysis.
+Sends images to Groq Vision API for category/severity analysis.
 Implements retry with exponential backoff and graceful fallback.
 
 Requirements: 2.1, 2.2, 2.3, 2.4, 2.5
@@ -13,7 +13,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Callable, Optional
 
-import openai
+from groq import Groq
 
 from app.core.config import settings
 from app.models.report import VALID_CATEGORIES
@@ -36,13 +36,13 @@ class AIAnalysis:
 
 
 class AIService:
-    """Service for AI-powered image analysis using OpenAI Vision API."""
+    """Service for AI-powered image analysis using Groq Vision API."""
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or settings.OPENAI_API_KEY
-        self.client: Optional[openai.OpenAI] = None
+        self.api_key = api_key or settings.GROQ_API_KEY
+        self.client: Optional[Groq] = None
         if self.api_key:
-            self.client = openai.OpenAI(api_key=self.api_key)
+            self.client = Groq(api_key=self.api_key)
 
     def analyze_image(self, photo_bytes: bytes) -> AIAnalysis:
         """
@@ -51,7 +51,7 @@ class AIService:
         Falls back to defaults on failure (Req 2.4).
         """
         if not self.client:
-            logger.warning("No OpenAI API key configured; returning defaults")
+            logger.warning("No Groq API key configured; returning defaults")
             return self.handle_api_error()
 
         request_id = str(uuid.uuid4())
@@ -67,7 +67,7 @@ class AIService:
             return self.handle_api_error(request_id)
 
     def _call_vision_api(self, photo_bytes: bytes, request_id: str) -> dict:
-        """Make the actual API call to OpenAI Vision."""
+        """Make the actual API call to Groq Vision."""
         b64_image = base64.b64encode(photo_bytes).decode("utf-8")
 
         categories_str = ", ".join(VALID_CATEGORIES)
@@ -80,7 +80,7 @@ class AIService:
         )
 
         response = self.client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="llama-3.2-90b-vision-preview",
             messages=[
                 {
                     "role": "user",
@@ -90,7 +90,6 @@ class AIService:
                             "type": "image_url",
                             "image_url": {
                                 "url": f"data:image/jpeg;base64,{b64_image}",
-                                "detail": "low",
                             },
                         },
                     ],
