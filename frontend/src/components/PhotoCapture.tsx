@@ -10,11 +10,31 @@ interface Props {
 export const PhotoCapture = ({ onReportCreated }: Props) => {
   const [preview, setPreview] = useState<string | null>(null);
   const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null);
+  const [gpsLoading, setGpsLoading] = useState(false);
   const [category, setCategory] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const fileRef = useRef<File | null>(null);
+
+  const requestBrowserLocation = () => {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGpsLoading(false);
+      },
+      () => {
+        setError("Unable to get location. Please enable GPS or enter coordinates manually.");
+        setGpsLoading(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -24,18 +44,15 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
     setPreview(URL.createObjectURL(file));
     setSuccess(false);
     setError(null);
+    setGps(null);
 
-    // Try EXIF GPS extraction
+    // Try EXIF GPS extraction first
     const coords = await parseExifCoords(file);
     if (coords) {
       setGps(coords);
-    } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setGps({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => setError("Unable to get location. Please enable GPS.")
-      );
     } else {
-      setError("Unable to get location.");
+      // No EXIF GPS — fall back to browser geolocation
+      requestBrowserLocation();
     }
   };
 
@@ -44,15 +61,17 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
       setError("Please upload a photo.");
       return;
     }
+    if (!gps) {
+      setError("Location is required. Please allow GPS access or wait for location to load.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
 
     const formData = new FormData();
     formData.append("photo", fileRef.current);
-    if (gps) {
-      formData.append("latitude", gps.lat.toString());
-      formData.append("longitude", gps.lng.toString());
-    }
+    formData.append("latitude", gps.lat.toString());
+    formData.append("longitude", gps.lng.toString());
     if (category) {
       formData.append("user_override_category", category);
     }
@@ -123,6 +142,16 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
         </div>
       )}
 
+      {gpsLoading && (
+        <div className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded-lg px-3 py-2 mb-4">
+          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          Getting your location…
+        </div>
+      )}
+
       {gps && (
         <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 rounded-lg px-3 py-2 mb-4">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -130,6 +159,19 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
           </svg>
           {gps.lat.toFixed(5)}, {gps.lng.toFixed(5)}
         </div>
+      )}
+
+      {!gps && !gpsLoading && preview && (
+        <button
+          type="button"
+          onClick={requestBrowserLocation}
+          className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg px-3 py-2 mb-4 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+          </svg>
+          📍 Get my location
+        </button>
       )}
 
       <div className="mb-5">
@@ -151,7 +193,7 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
 
       <button
         onClick={handleSubmit}
-        disabled={submitting || !fileRef.current}
+        disabled={submitting || !fileRef.current || !gps || gpsLoading}
         className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2.5 px-4 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
       >
         {submitting ? (
