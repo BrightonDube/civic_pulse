@@ -84,7 +84,7 @@ docker compose up --build
 |----------|-------------|---------|
 | `DATABASE_URL` | PostgreSQL connection string | `sqlite:///./civicpulse.db` |
 | `SECRET_KEY` | JWT signing secret | (required) |
-| `OPENAI_API_KEY` | OpenAI API key for Vision | (optional, fallback to defaults) |
+| `GROQ_API_KEY` | Groq API key for Vision | (optional, fallback to defaults) |
 | `CORS_ORIGINS` | Allowed CORS origins | `*` |
 | `RATE_LIMIT` | API rate limit | `100/minute` |
 | `VITE_API_URL` | Backend API URL for frontend | `http://localhost:8000` |

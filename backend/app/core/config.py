@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./civicpulse_dev.db"
     SECRET_KEY: str = "change-me-in-production"
-    OPENAI_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
     
     model_config = ConfigDict(env_file=".env")
 
