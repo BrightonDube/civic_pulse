@@ -59,6 +59,10 @@ async def create_report(
     GPS is extracted from EXIF if not provided.
     Requirements: 1.1, 1.2, 1.4, 14.4, 19.1
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Creating report for user: {current_user.id} ({current_user.email})")
+    
     photo_bytes = await photo.read()
     if not photo_bytes:
         raise HTTPException(status_code=400, detail="Photo is required")
@@ -120,6 +124,7 @@ async def create_report(
 
     service = ReportService(db)
     try:
+        logger.info(f"Attempting to create report with category={category}, severity={severity_score}")
         report = service.create_report(
             user_id=current_user.id,
             photo_bytes=photo_bytes,
@@ -130,9 +135,12 @@ async def create_report(
             ai_generated=ai_generated,
             additional_photos=additional_photo_bytes if additional_photo_bytes else None,
         )
+        logger.info(f"Report created successfully: {report.id}")
     except ValueError as e:
+        logger.error(f"ValueError creating report: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except RuntimeError as e:
+        logger.error(f"RuntimeError creating report: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
     response = _report_to_response(report)

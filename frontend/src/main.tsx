@@ -13,6 +13,8 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Navbar } from "./components/Navbar";
 import { Home } from "./pages/Home";
 import { AdminDashboard } from "./pages/AdminDashboard";
+import { AnalyticsDashboard } from "./pages/AnalyticsDashboard";
+import { UserManagement } from "./pages/UserManagement";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { UserDashboard } from "./pages/UserDashboard";
@@ -66,6 +68,22 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <AnalyticsDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <UserManagement />
                   </ProtectedRoute>
                 }
               />

@@ -63,19 +63,27 @@ export const AdminMap = ({ filters, externalReports }: Props) => {
 
   return (
     <>
-      <MapContainer
-        center={[0, 0]}
-        zoom={2}
-        style={{ height: "500px", width: "100%" }}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <MarkerCluster markers={markers} />
-      </MapContainer>
+      <div className="relative z-0">
+        <MapContainer
+          center={[0, 0]}
+          zoom={2}
+          style={{ height: "500px", width: "100%" }}
+        >
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <MarkerCluster markers={markers} />
+        </MapContainer>
+      </div>
 
       {selectedReport && (
         <ReportDetailModal
           report={selectedReport}
           onClose={() => setSelectedReport(null)}
+          onUpdate={(updatedReport) => {
+            setReports((prev) =>
+              prev.map((r) => (r.id === updatedReport.id ? updatedReport : r))
+            );
+            setSelectedReport(updatedReport);
+          }}
         />
       )}
     </>

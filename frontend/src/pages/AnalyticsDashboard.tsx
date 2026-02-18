@@ -7,6 +7,8 @@ import {
   getHeatZones,
   exportCSV,
   exportPDF,
+  getCategories,
+  getStatuses,
 } from "../services/api";
 import { KeyMetrics, TrendPoint, SeverityTrend, HeatZone } from "../types";
 
@@ -17,6 +19,8 @@ export const AnalyticsDashboard = () => {
   const [categoryDist, setCategoryDist] = useState<Record<string, number>>({});
   const [severityTrends, setSeverityTrends] = useState<SeverityTrend[]>([]);
   const [heatZones, setHeatZones] = useState<HeatZone[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     category: "",
@@ -24,6 +28,11 @@ export const AnalyticsDashboard = () => {
     date_from: "",
     date_to: "",
   });
+
+  useEffect(() => {
+    getCategories().then(setCategories).catch(console.error);
+    getStatuses().then(setStatuses).catch(console.error);
+  }, []);
 
   useEffect(() => {
     loadAnalytics();
@@ -134,12 +143,9 @@ export const AnalyticsDashboard = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Categories</option>
-              <option value="Pothole">Pothole</option>
-              <option value="Water Leak">Water Leak</option>
-              <option value="Vandalism">Vandalism</option>
-              <option value="Broken Streetlight">Broken Streetlight</option>
-              <option value="Illegal Dumping">Illegal Dumping</option>
-              <option value="Other">Other</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -150,9 +156,9 @@ export const AnalyticsDashboard = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Statuses</option>
-              <option value="Reported">Reported</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Fixed">Fixed</option>
+              {statuses.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -343,7 +349,7 @@ export const AnalyticsDashboard = () => {
                     point.average_severity >= 8
                       ? "bg-red-500"
                       : point.average_severity >= 4
-                      ? "bg-yellow-500"
+                      ? "bg-orange-500"
                       : "bg-green-500";
                   return (
                     <div key={idx} className="flex-1 flex flex-col items-center">
