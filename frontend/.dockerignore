@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+*.md
+.env*
+.vscode
+coverage
+*.log
+
+# Explicitly include nginx.conf (don't ignore it)
+!nginx.conf
