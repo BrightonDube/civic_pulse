@@ -2,10 +2,12 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+# When deployed via Railway from root, files are in frontend/
+# When built locally from frontend/, files are in ./
+COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --legacy-peer-deps
 
-COPY . .
+COPY frontend/ .
 
 ARG VITE_API_URL=""
 ENV VITE_API_URL=$VITE_API_URL
