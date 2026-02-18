@@ -64,3 +64,48 @@ def read_root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
+
+@app.post("/seed")
+def seed_database(seed_key: str):
+    """Seed the database with test users. Requires SEED_KEY for security."""
+    import os
+    from app.core.database import SessionLocal
+    from app.models.user import User
+    
+    expected_key = os.getenv("SEED_KEY", "civicpulse-seed-2024")
+    if seed_key != expected_key:
+        return JSONResponse(status_code=403, content={"error": "Invalid seed key"})
+    
+    db = SessionLocal()
+    results = []
+    
+    try:
+        users_to_create = [
+            {"email": "admin@civicpulse.com", "password": "admin123", "phone": "+1234567890", "role": "admin"},
+            {"email": "bizpilot16@gmail.com", "password": "testuser123", "phone": "+1987654321", "role": "user"},
+            {"email": "testuser@civicpulse.com", "password": "testuser123", "phone": "+1122334455", "role": "user"},
+        ]
+        
+        for user_data in users_to_create:
+            existing = db.query(User).filter(User.email == user_data["email"]).first()
+            if existing:
+                results.append({"email": user_data["email"], "status": "exists", "role": existing.role})
+            else:
+                user = User(
+                    email=user_data["email"],
+                    phone=user_data["phone"],
+                    role=user_data["role"],
+                    email_verified=True
+                )
+                user.set_password(user_data["password"])
+                db.add(user)
+                db.commit()
+                results.append({"email": user_data["email"], "status": "created", "role": user_data["role"]})
+        
+        return {"message": "Seeding complete", "users": results}
+    except Exception as e:
+        db.rollback()
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
