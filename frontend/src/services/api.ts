@@ -160,3 +160,65 @@ export async function uploadReport(
     return false;
   }
 }
+
+// Analytics
+export async function getKeyMetrics(params?: Record<string, string>): Promise<any> {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<any>(`/api/analytics/metrics${query}`);
+}
+
+export async function getTrends(period: "daily" | "weekly" | "monthly", params?: Record<string, string>): Promise<any[]> {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<any[]>(`/api/analytics/trends/${period}${query}`);
+}
+
+export async function getCategoryDistribution(params?: Record<string, string>): Promise<Record<string, number>> {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<Record<string, number>>(`/api/analytics/category-distribution${query}`);
+}
+
+export async function getSeverityTrends(period: "daily" | "weekly" | "monthly", params?: Record<string, string>): Promise<any[]> {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<any[]>(`/api/analytics/severity-trends/${period}${query}`);
+}
+
+export async function getHeatZones(params?: Record<string, string>): Promise<any[]> {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  return request<any[]>(`/api/analytics/heat-zones${query}`);
+}
+
+export async function exportCSV(params?: Record<string, string>): Promise<Blob> {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  
+  const res = await fetch(`${API_BASE}/api/analytics/export/csv${query}`, {
+    method: "GET",
+    headers,
+  });
+  
+  if (!res.ok) {
+    throw new Error("Failed to export CSV");
+  }
+  
+  return res.blob();
+}
+
+export async function exportPDF(params?: Record<string, string>): Promise<Blob> {
+  const query = params ? "?" + new URLSearchParams(params).toString() : "";
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+  
+  const res = await fetch(`${API_BASE}/api/analytics/export/pdf${query}`, {
+    method: "GET",
+    headers,
+  });
+  
+  if (!res.ok) {
+    throw new Error("Failed to export PDF");
+  }
+  
+  return res.blob();
+}

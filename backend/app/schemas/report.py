@@ -81,3 +81,15 @@ def severity_to_color(severity: int) -> str:
     elif severity >= 4:
         return "yellow"
     return "green"
+
+
+class ReportPhotoResponse(BaseModel):
+    """Schema for report photo response. Requirements: 14.4, 14.5"""
+    id: str
+    report_id: str
+    photo_url: str
+    is_before_photo: bool
+    upload_order: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}

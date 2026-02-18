@@ -1,7 +1,7 @@
 """
 Report API endpoints.
 
-Requirements: 1.4, 2.6, 11.2
+Requirements: 1.4, 2.6, 11.2, 14.4, 19.1
 """
 import os
 from typing import Optional
@@ -12,8 +12,10 @@ from sqlalchemy.orm import Session
 from app.core.auth import get_current_user
 from app.core.database import get_db
 from app.models.user import User
-from app.schemas.report import ReportResponse, ReportCategoryUpdate, severity_to_color
+from app.schemas.report import ReportResponse, ReportCategoryUpdate, severity_to_color, ReportPhotoResponse
+from app.schemas.comment import CommentCreate, CommentResponse, ThreadedCommentResponse
 from app.services.report_service import ReportService
+from app.services.comment_service import CommentService
 from app.services.gps_service import extract_gps_from_exif
 from app.services.ai_service import AIService
 from app.services.duplicate_service import DuplicateDetectionService
@@ -44,6 +46,7 @@ def _report_to_response(report) -> ReportResponse:
 @router.post("/", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
 async def create_report(
     photo: UploadFile = File(...),
+    additional_photos: Optional[list[UploadFile]] = File(None),
     latitude: Optional[float] = Form(None),
     longitude: Optional[float] = Form(None),
     user_override_category: Optional[str] = Form(None),
@@ -51,13 +54,40 @@ async def create_report(
     db: Session = Depends(get_db),
 ):
     """
-    Submit a new report with photo and location.
+    Submit a new report with photo(s) and location.
+    Supports up to 5 photos with 25MB combined size limit.
     GPS is extracted from EXIF if not provided.
-    Requirements: 1.1, 1.2, 1.4
+    Requirements: 1.1, 1.2, 1.4, 14.4, 19.1
     """
     photo_bytes = await photo.read()
     if not photo_bytes:
         raise HTTPException(status_code=400, detail="Photo is required")
+
+    # Read additional photos if provided
+    additional_photo_bytes = []
+    if additional_photos:
+        for add_photo in additional_photos:
+            add_bytes = await add_photo.read()
+            if add_bytes:
+                additional_photo_bytes.append(add_bytes)
+
+    # Validate photo count (up to 5 total)
+    total_photos = 1 + len(additional_photo_bytes)
+    if total_photos > 5:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Maximum 5 photos allowed per report, received {total_photos}"
+        )
+
+    # Validate combined size (25MB limit)
+    total_size = len(photo_bytes) + sum(len(p) for p in additional_photo_bytes)
+    max_size_bytes = 25 * 1024 * 1024  # 25MB
+    if total_size > max_size_bytes:
+        size_mb = total_size / (1024 * 1024)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Combined photo size ({size_mb:.2f}MB) exceeds 25MB limit"
+        )
 
     # Try EXIF extraction if coordinates not provided
     if latitude is None or longitude is None:
@@ -89,15 +119,22 @@ async def create_report(
         return _report_to_response(duplicate)
 
     service = ReportService(db)
-    report = service.create_report(
-        user_id=current_user.id,
-        photo_bytes=photo_bytes,
-        latitude=latitude,
-        longitude=longitude,
-        category=category,
-        severity_score=severity_score,
-        ai_generated=ai_generated,
-    )
+    try:
+        report = service.create_report(
+            user_id=current_user.id,
+            photo_bytes=photo_bytes,
+            latitude=latitude,
+            longitude=longitude,
+            category=category,
+            severity_score=severity_score,
+            ai_generated=ai_generated,
+            additional_photos=additional_photo_bytes if additional_photo_bytes else None,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
     response = _report_to_response(report)
     # Broadcast new report via WebSocket (Req 3.6)
     await manager.broadcast({"event": "new_report", "data": response.model_dump(mode="json")})
@@ -223,3 +260,159 @@ def find_nearby_reports(
     dup_service = DuplicateDetectionService(db)
     reports = dup_service.find_nearby_reports(latitude, longitude, radius)
     return [_report_to_response(r) for r in reports]
+
+
+
+@router.post("/{report_id}/comments", response_model=CommentResponse, status_code=status.HTTP_201_CREATED)
+def create_comment(
+    report_id: str,
+    data: CommentCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Add a comment to a report.
+    Supports threaded discussions via parent_comment_id.
+    
+    Requirements: 14.1, 14.2, 14.3
+    """
+    import uuid as _uuid
+    try:
+        rid = _uuid.UUID(report_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid report ID")
+
+    # Parse parent_comment_id if provided
+    parent_id = None
+    if data.parent_comment_id:
+        try:
+            parent_id = _uuid.UUID(data.parent_comment_id)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid parent comment ID")
+
+    service = CommentService(db)
+    try:
+        comment = service.create_comment(
+            report_id=rid,
+            user_id=current_user.id,
+            text=data.text,
+            parent_comment_id=parent_id,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return CommentResponse(
+        id=str(comment.id),
+        report_id=str(comment.report_id),
+        user_id=str(comment.user_id),
+        parent_comment_id=str(comment.parent_comment_id) if comment.parent_comment_id else None,
+        text=comment.text,
+        created_at=comment.created_at,
+        updated_at=comment.updated_at,
+    )
+
+
+@router.get("/{report_id}/comments", response_model=list[CommentResponse])
+def get_comments(
+    report_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all comments for a report in chronological order.
+    
+    Requirements: 14.1 - Comments displayed in chronological order
+    """
+    import uuid as _uuid
+    try:
+        rid = _uuid.UUID(report_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid report ID")
+
+    service = CommentService(db)
+    comments = service.get_comments(rid)
+    
+    return [
+        CommentResponse(
+            id=str(c.id),
+            report_id=str(c.report_id),
+            user_id=str(c.user_id),
+            parent_comment_id=str(c.parent_comment_id) if c.parent_comment_id else None,
+            text=c.text,
+            created_at=c.created_at,
+            updated_at=c.updated_at,
+        )
+        for c in comments
+    ]
+
+
+@router.get("/{report_id}/comments/tree", response_model=list[ThreadedCommentResponse])
+def get_comments_tree(
+    report_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all comments for a report organized as a threaded tree structure.
+    
+    Top-level comments are returned at the root level, with replies nested
+    under their parent comments in the 'replies' field.
+    
+    Requirements: 14.3 - Support threaded discussions
+    """
+    import uuid as _uuid
+    try:
+        rid = _uuid.UUID(report_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid report ID")
+
+    service = CommentService(db)
+    tree = service.build_comment_tree(rid)
+    
+    def convert_to_response(comment_dict):
+        """Recursively convert comment dict to ThreadedCommentResponse."""
+        return ThreadedCommentResponse(
+            id=str(comment_dict["id"]),
+            report_id=str(comment_dict["report_id"]),
+            user_id=str(comment_dict["user_id"]),
+            parent_comment_id=str(comment_dict["parent_comment_id"]) if comment_dict["parent_comment_id"] else None,
+            text=comment_dict["text"],
+            created_at=comment_dict["created_at"],
+            updated_at=comment_dict["updated_at"],
+            replies=[convert_to_response(reply) for reply in comment_dict["replies"]],
+        )
+    
+    return [convert_to_response(comment) for comment in tree]
+
+
+@router.get("/{report_id}/photos", response_model=list[ReportPhotoResponse])
+def get_report_photos(
+    report_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Get all photos for a report in upload order.
+    
+    Requirements: 14.4, 14.5 - Multiple photos with gallery ordering
+    """
+    import uuid as _uuid
+    try:
+        rid = _uuid.UUID(report_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid report ID")
+
+    service = ReportService(db)
+    photos = service.get_report_photos(rid)
+    
+    return [
+        ReportPhotoResponse(
+            id=str(p.id),
+            report_id=str(p.report_id),
+            photo_url=p.photo_url,
+            is_before_photo=p.is_before_photo,
+            upload_order=p.upload_order,
+            created_at=p.created_at,
+        )
+        for p in photos
+    ]

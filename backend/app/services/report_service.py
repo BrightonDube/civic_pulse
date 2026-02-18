@@ -1,7 +1,7 @@
 """
 Service for report creation, retrieval, and management.
 
-Requirements: 1.4, 4.1, 2.6
+Requirements: 1.4, 4.1, 2.6, 14.4, 19.1
 """
 import os
 import uuid
@@ -11,11 +11,14 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.report import Report, VALID_CATEGORIES, VALID_STATUSES
+from app.models.report_photo import ReportPhoto
 from app.models.upvote import Upvote
 from app.models.status_history import StatusHistory
 
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "uploads")
+MAX_PHOTOS_PER_REPORT = 5
+MAX_COMBINED_SIZE_MB = 25
 
 
 def _ensure_upload_dir():
@@ -37,14 +40,30 @@ class ReportService:
         category: str = "Other",
         severity_score: int = 5,
         ai_generated: bool = False,
+        additional_photos: Optional[List[bytes]] = None,
     ) -> Report:
         """
         Create a new report. Sets initial status to 'Reported'.
-        Requirements: 1.4, 4.1
+        Supports multiple photos (up to 5) with 25MB combined size limit.
+        Requirements: 1.4, 4.1, 14.4, 19.1
         """
         _ensure_upload_dir()
 
-        # Save photo to filesystem
+        # Validate photo count
+        all_photos = [photo_bytes]
+        if additional_photos:
+            all_photos.extend(additional_photos)
+        
+        if len(all_photos) > MAX_PHOTOS_PER_REPORT:
+            raise ValueError(f"Maximum {MAX_PHOTOS_PER_REPORT} photos allowed per report")
+        
+        # Validate combined size (25MB = 25 * 1024 * 1024 bytes)
+        total_size = sum(len(photo) for photo in all_photos)
+        max_size_bytes = MAX_COMBINED_SIZE_MB * 1024 * 1024
+        if total_size > max_size_bytes:
+            raise ValueError(f"Combined photo size exceeds {MAX_COMBINED_SIZE_MB}MB limit")
+
+        # Save primary photo to filesystem (for backward compatibility)
         photo_filename = f"{uuid.uuid4()}.jpg"
         photo_path = os.path.join(UPLOAD_DIR, photo_filename)
         try:
@@ -55,6 +74,7 @@ class ReportService:
 
         photo_url = f"/uploads/{photo_filename}"
 
+        # Create report
         report = Report(
             user_id=user_id,
             photo_url=photo_url,
@@ -66,6 +86,32 @@ class ReportService:
             ai_generated=ai_generated,
         )
         self.db.add(report)
+        self.db.flush()  # Get report ID before adding photos
+
+        # Save all photos to ReportPhoto table
+        for idx, photo_data in enumerate(all_photos, start=1):
+            if idx == 1:
+                # First photo already saved, use existing URL
+                photo_file_url = photo_url
+            else:
+                # Save additional photos
+                additional_filename = f"{uuid.uuid4()}.jpg"
+                additional_path = os.path.join(UPLOAD_DIR, additional_filename)
+                try:
+                    with open(additional_path, "wb") as f:
+                        f.write(photo_data)
+                except OSError as e:
+                    raise RuntimeError(f"Failed to save photo: {e}") from e
+                photo_file_url = f"/uploads/{additional_filename}"
+            
+            report_photo = ReportPhoto(
+                report_id=report.id,
+                photo_url=photo_file_url,
+                is_before_photo=True,
+                upload_order=idx,
+            )
+            self.db.add(report_photo)
+
         self.db.commit()
         self.db.refresh(report)
 
@@ -224,5 +270,17 @@ class ReportService:
             self.db.query(StatusHistory)
             .filter(StatusHistory.report_id == report_id)
             .order_by(StatusHistory.changed_at.asc())
+            .all()
+        )
+
+    def get_report_photos(self, report_id: uuid.UUID) -> List[ReportPhoto]:
+        """
+        Get all photos for a report, ordered by upload_order.
+        Requirements: 14.4, 14.5
+        """
+        return (
+            self.db.query(ReportPhoto)
+            .filter(ReportPhoto.report_id == report_id)
+            .order_by(ReportPhoto.upload_order.asc())
             .all()
         )

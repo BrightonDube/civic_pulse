@@ -58,3 +58,38 @@ export interface AuditLogEntry {
   details: string | null;
   created_at: string;
 }
+
+export interface KeyMetrics {
+  total_reports: number;
+  resolution_rate: number;
+  average_resolution_time: number;
+}
+
+export interface TrendPoint {
+  period: string;
+  count: number;
+}
+
+export interface SeverityTrend {
+  period: string;
+  average_severity: number;
+  count: number;
+}
+
+export interface HeatZone {
+  latitude: number;
+  longitude: number;
+  report_count: number;
+  report_ids: string[];
+}
+
+export interface AnalyticsFilters {
+  category?: string;
+  status?: string;
+  date_from?: string;
+  date_to?: string;
+  min_lat?: number;
+  max_lat?: number;
+  min_lon?: number;
+  max_lon?: number;
+}
