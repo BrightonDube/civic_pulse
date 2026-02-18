@@ -217,10 +217,22 @@ uploads/
 # Project rules
 # ------------------------------------------------------------
 
+# Documentation folder (keep only README.md in root)
+docs/
+scripts/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Config examples (keep .txt versions in docs)
+.eslintrc.cjs.txt
+.prettierrc.txt
+
 # Never commit Markdown docs (except README.md)
 *.md
 !README.md
-!Project_requirements.md
 
 # ------------------------------------------------------------
 # Frontend (React/TypeScript) common ignores

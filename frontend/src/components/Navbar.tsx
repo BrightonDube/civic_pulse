@@ -30,6 +30,7 @@ export const Navbar = () => {
                 <NavLink to="/leaderboard">Leaderboard</NavLink>
                 <NavLink to="/settings">Settings</NavLink>
                 {isAdmin && <NavLink to="/admin">Admin</NavLink>}
+                {isAdmin && <NavLink to="/analytics">Analytics</NavLink>}
                 <div className="ml-3 pl-3 border-l border-white/20 flex items-center gap-3">
                   <span className="text-blue-200 text-sm truncate max-w-[160px]">{user?.email}</span>
                   <button
@@ -80,6 +81,7 @@ export const Navbar = () => {
                 <MobileNavLink to="/leaderboard" onClick={() => setMobileOpen(false)}>Leaderboard</MobileNavLink>
                 <MobileNavLink to="/settings" onClick={() => setMobileOpen(false)}>Settings</MobileNavLink>
                 {isAdmin && <MobileNavLink to="/admin" onClick={() => setMobileOpen(false)}>Admin</MobileNavLink>}
+                {isAdmin && <MobileNavLink to="/analytics" onClick={() => setMobileOpen(false)}>Analytics</MobileNavLink>}
                 <div className="pt-2 mt-2 border-t border-white/10">
                   <p className="text-blue-200 text-sm px-3 py-1">{user?.email}</p>
                   <button

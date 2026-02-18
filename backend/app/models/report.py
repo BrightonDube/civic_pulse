@@ -44,6 +44,9 @@ class Report(Base):
     updated_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc),
                         onupdate=lambda: datetime.now(timezone.utc))
 
+    # Relationships
+    photos = relationship("ReportPhoto", backref="report", cascade="all, delete-orphan")
+
     __table_args__ = (
         Index("ix_reports_status", "status"),
         Index("ix_reports_category", "category"),

@@ -23,7 +23,6 @@ async def get_current_user(
 ) -> User:
     """
     Dependency to get the current authenticated user from JWT token.
-    Requirements: 8.6, 11.6
     """
     if credentials is None:
         raise HTTPException(
@@ -60,7 +59,6 @@ async def require_admin(
 ) -> User:
     """
     Dependency that requires the current user to have admin role.
-    Requirements: 8.4, 8.5
     """
     if current_user.role != "admin":
         raise HTTPException(

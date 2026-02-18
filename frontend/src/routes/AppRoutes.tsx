@@ -6,6 +6,7 @@ import { RegisterPage } from "../pages/RegisterPage";
 import { UserDashboard } from "../pages/UserDashboard";
 import { LeaderboardPage } from "../pages/LeaderboardPage";
 import { SettingsPage } from "../pages/SettingsPage";
+import { AnalyticsDashboard } from "../pages/AnalyticsDashboard";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 
 export const AppRoutes = () => (
@@ -17,5 +18,6 @@ export const AppRoutes = () => (
     <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
     <Route path="/admin" element={<ProtectedRoute requireAdmin><AdminDashboard /></ProtectedRoute>} />
+    <Route path="/analytics" element={<ProtectedRoute requireAdmin><AnalyticsDashboard /></ProtectedRoute>} />
   </Routes>
 );
