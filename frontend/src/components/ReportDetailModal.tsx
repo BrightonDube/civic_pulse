@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Report } from "../types";
 import { useAuth } from "../context/AuthContext";
+import { getImageUrl } from "../services/api";
 import {
   upvoteReport,
   adminUpdateStatus,
@@ -90,7 +91,7 @@ export const ReportDetailModal = ({ report, onClose, onUpdate }: Props) => {
 
         {current.photo_url && (
           <img
-            src={current.photo_url}
+            src={getImageUrl(current.photo_url)}
             alt="report"
             className="w-full h-56 object-cover rounded-t-2xl"
           />
@@ -106,7 +107,7 @@ export const ReportDetailModal = ({ report, onClose, onUpdate }: Props) => {
             <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
               current.status === "Fixed" ? "bg-green-100 text-green-800" :
               current.status === "In Progress" ? "bg-blue-100 text-blue-800" :
-              "bg-yellow-100 text-yellow-800"
+              "bg-orange-100 text-orange-800"
             }`}>
               {current.status}
             </span>

@@ -1,11 +1,16 @@
-import { useState } from "react";
-import { createReport } from "../services/api";
+import { useState, useEffect } from "react";
+import { createReport, getCategories } from "../services/api";
 
 export const ReportForm = () => {
   const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    getCategories().then(setCategories).catch(console.error);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,11 +63,9 @@ export const ReportForm = () => {
           className="block w-full px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
         >
           <option value="">Select category</option>
-          <option value="Pothole">🕳️ Pothole</option>
-          <option value="Water Leak">💧 Water Leak</option>
-          <option value="Vandalism">🎨 Vandalism</option>
-          <option value="Broken Light">💡 Broken Light</option>
-          <option value="Other">📋 Other</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
         </select>
       </div>
 

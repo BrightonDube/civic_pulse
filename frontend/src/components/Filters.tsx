@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getCategories, getStatuses } from "../services/api";
 
 interface FiltersProps {
   filters: {
@@ -10,6 +11,14 @@ interface FiltersProps {
 }
 
 export const Filters: React.FC<FiltersProps> = ({ filters, setFilters }) => {
+  const [categories, setCategories] = useState<string[]>([]);
+  const [statuses, setStatuses] = useState<string[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories).catch(console.error);
+    getStatuses().then(setStatuses).catch(console.error);
+  }, []);
+
   return (
     <div className="flex flex-wrap gap-3 mb-6">
       <select
@@ -20,12 +29,9 @@ export const Filters: React.FC<FiltersProps> = ({ filters, setFilters }) => {
         className="px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
       >
         <option value="">All Categories</option>
-        <option value="Pothole">🕳️ Pothole</option>
-        <option value="Water Leak">💧 Water Leak</option>
-        <option value="Vandalism">🎨 Vandalism</option>
-        <option value="Broken Light">💡 Broken Light</option>
-        <option value="Road Damage">🛣️ Road Damage</option>
-        <option value="Other">📋 Other</option>
+        {categories.map((cat) => (
+          <option key={cat} value={cat}>{cat}</option>
+        ))}
       </select>
 
       <select
@@ -34,9 +40,9 @@ export const Filters: React.FC<FiltersProps> = ({ filters, setFilters }) => {
         className="px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
       >
         <option value="">All Statuses</option>
-        <option value="Reported">Reported</option>
-        <option value="In Progress">In Progress</option>
-        <option value="Fixed">Fixed</option>
+        {statuses.map((status) => (
+          <option key={status} value={status}>{status}</option>
+        ))}
       </select>
 
       <input

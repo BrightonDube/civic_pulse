@@ -11,23 +11,43 @@ export const parseExifCoords = (
       img.src = reader.result as string;
 
       img.onload = function () {
-        // NB:Explicitly type `this` as any for EXIF callbacks
-        EXIF.getData(img as any, function (this: any) {
-          const lat = EXIF.getTag(this, 'GPSLatitude');
-          const lng = EXIF.getTag(this, 'GPSLongitude');
-          const latRef = EXIF.getTag(this, 'GPSLatitudeRef');
-          const lngRef = EXIF.getTag(this, 'GPSLongitudeRef');
+        try {
+          // NB:Explicitly type `this` as any for EXIF callbacks
+          EXIF.getData(img as any, function (this: any) {
+            try {
+              const lat = EXIF.getTag(this, 'GPSLatitude');
+              const lng = EXIF.getTag(this, 'GPSLongitude');
+              const latRef = EXIF.getTag(this, 'GPSLatitudeRef');
+              const lngRef = EXIF.getTag(this, 'GPSLongitudeRef');
 
-          if (lat && lng && latRef && lngRef) {
-            resolve({
-              lat: convertDMSToDD(lat, latRef),
-              lng: convertDMSToDD(lng, lngRef),
-            });
-          } else {
-            resolve(null);
-          }
-        });
+              if (lat && lng && latRef && lngRef) {
+                resolve({
+                  lat: convertDMSToDD(lat, latRef),
+                  lng: convertDMSToDD(lng, lngRef),
+                });
+              } else {
+                resolve(null);
+              }
+            } catch (error) {
+              console.warn('Error parsing EXIF GPS data:', error);
+              resolve(null);
+            }
+          });
+        } catch (error) {
+          console.warn('Error reading EXIF data:', error);
+          resolve(null);
+        }
       };
+
+      img.onerror = function () {
+        console.warn('Error loading image for EXIF parsing');
+        resolve(null);
+      };
+    };
+
+    reader.onerror = function () {
+      console.warn('Error reading file for EXIF parsing');
+      resolve(null);
     };
 
     reader.readAsDataURL(file);

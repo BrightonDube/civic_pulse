@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { createReport } from "../services/api";
+import { useState, useRef, useEffect } from "react";
+import { createReport, getCategories } from "../services/api";
 import { Report } from "../types";
 import { parseExifCoords } from "../utils/exif";
 
@@ -12,10 +12,17 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
   const [gps, setGps] = useState<{ lat: number; lng: number } | null>(null);
   const [gpsLoading, setGpsLoading] = useState(false);
   const [category, setCategory] = useState<string>("");
+  const [categories, setCategories] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const fileRef = useRef<File | null>(null);
+
+  useEffect(() => {
+    getCategories()
+      .then(setCategories)
+      .catch(() => setError("Failed to load categories"));
+  }, []);
 
   const requestBrowserLocation = () => {
     if (!navigator.geolocation) {
@@ -44,14 +51,15 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
     setPreview(URL.createObjectURL(file));
     setSuccess(false);
     setError(null);
-    setGps(null);
+    setGpsLoading(true);
 
     // Try EXIF GPS extraction first
     const coords = await parseExifCoords(file);
     if (coords) {
       setGps(coords);
+      setGpsLoading(false);
     } else {
-      // No EXIF GPS — fall back to browser geolocation
+      // No EXIF GPS — automatically fall back to browser geolocation
       requestBrowserLocation();
     }
   };
@@ -78,6 +86,7 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
 
     try {
       const report = await createReport(formData);
+      console.log("Report created successfully:", report);
       setSuccess(true);
       setPreview(null);
       setGps(null);
@@ -85,6 +94,7 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
       fileRef.current = null;
       onReportCreated?.(report);
     } catch (err: unknown) {
+      console.error("Error creating report:", err);
       setError(err instanceof Error ? err.message : "Submission failed");
     } finally {
       setSubmitting(false);
@@ -161,19 +171,6 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
         </div>
       )}
 
-      {!gps && !gpsLoading && preview && (
-        <button
-          type="button"
-          onClick={requestBrowserLocation}
-          className="flex items-center gap-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg px-3 py-2 mb-4 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-          </svg>
-          📍 Get my location
-        </button>
-      )}
-
       <div className="mb-5">
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Category (optional)</label>
         <select
@@ -182,12 +179,9 @@ export const PhotoCapture = ({ onReportCreated }: Props) => {
           className="block w-full px-4 py-2.5 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow bg-white"
         >
           <option value="">🤖 Let AI decide</option>
-          <option value="Pothole">🕳️ Pothole</option>
-          <option value="Water Leak">💧 Water Leak</option>
-          <option value="Vandalism">🎨 Vandalism</option>
-          <option value="Broken Light">💡 Broken Light</option>
-          <option value="Road Damage">🛣️ Road Damage</option>
-          <option value="Other">📋 Other</option>
+          {categories.map((cat) => (
+            <option key={cat} value={cat}>{cat}</option>
+          ))}
         </select>
       </div>
 

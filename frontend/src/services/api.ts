@@ -10,6 +10,12 @@ const getApiBase = (): string => {
 };
 const API_BASE = getApiBase();
 
+export function getImageUrl(photoUrl: string): string {
+  if (!photoUrl) return "";
+  if (photoUrl.startsWith("http")) return photoUrl;
+  return `${API_BASE}${photoUrl}`;
+}
+
 function getToken(): string | null {
   return localStorage.getItem("access_token");
 }
@@ -221,4 +227,15 @@ export async function exportPDF(params?: Record<string, string>): Promise<Blob> 
   }
   
   return res.blob();
+}
+
+// Config
+export async function getCategories(): Promise<string[]> {
+  const res = await request<{ categories: string[] }>("/api/config/categories");
+  return res.categories;
+}
+
+export async function getStatuses(): Promise<string[]> {
+  const res = await request<{ statuses: string[] }>("/api/config/statuses");
+  return res.statuses;
 }

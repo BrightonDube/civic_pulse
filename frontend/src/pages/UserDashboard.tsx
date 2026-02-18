@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { getMyReports } from "../services/api";
+import { getMyReports, getImageUrl } from "../services/api";
 import { Report } from "../types";
 import { OfflineBanner } from "../components/offlineBanner";
 
 const statusColors: Record<string, string> = {
-  Reported: "bg-yellow-100 text-yellow-800",
+  Reported: "bg-orange-100 text-orange-800",
   "In Progress": "bg-blue-100 text-blue-800",
   Fixed: "bg-green-100 text-green-800",
 };
@@ -60,7 +60,7 @@ export const UserDashboard = () => {
             >
               {r.photo_url && (
                 <img
-                  src={r.photo_url}
+                  src={getImageUrl(r.photo_url)}
                   alt="report"
                   className="w-28 h-28 object-cover rounded-xl shrink-0"
                 />

@@ -16,8 +16,6 @@ function App({ children }: { children: React.ReactNode }) {
       // Trigger draft synchronization when connection is restored
       syncDrafts();
     }
-  }, [isOnline]);
-
   }, [isOnline]); // Re-run effect when online status changes
 
   // Render child components without any wrapper elements
