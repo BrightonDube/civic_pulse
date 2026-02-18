@@ -117,9 +117,14 @@ async def create_report(
     ai_generated = analysis.ai_generated and (user_override_category is None)
 
     # Duplicate detection (Req 5.1, 5.2)
+    # Only check for duplicates from the SAME user to prevent accidental re-submissions
+    # Don't block users from reporting the same issue - multiple reports help prioritize
     dup_service = DuplicateDetectionService(db)
-    duplicate = dup_service.check_for_duplicates(latitude, longitude, category)
+    duplicate = dup_service.check_for_duplicates(
+        latitude, longitude, category, user_id=current_user.id
+    )
     if duplicate:
+        # Return existing report only if it belongs to the same user (prevents double-submission)
         return _report_to_response(duplicate)
 
     service = ReportService(db)

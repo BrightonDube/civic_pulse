@@ -7,6 +7,7 @@ For PostgreSQL+PostGIS, this would use ST_DWithin.
 Requirements: 5.1, 5.2
 """
 import math
+import uuid
 from typing import List, Optional
 
 from sqlalchemy.orm import Session
@@ -78,15 +79,22 @@ class DuplicateDetectionService:
         longitude: float,
         category: str,
         radius_meters: float = DEFAULT_RADIUS_METERS,
+        user_id: Optional[uuid.UUID] = None,
     ) -> Optional[Report]:
         """
         Check if a report with the same category exists nearby.
+        If user_id is provided, only checks for duplicates from that specific user
+        (to prevent accidental re-submissions while allowing multiple users to report same issue).
         Returns the closest matching report or None.
         Property 16: Duplicate Detection
         Requirements: 5.2
         """
         nearby = self.find_nearby_reports(latitude, longitude, radius_meters)
         matching = [r for r in nearby if r.category == category]
+        
+        # If user_id provided, only consider duplicates from the same user
+        if user_id is not None:
+            matching = [r for r in matching if r.user_id == user_id]
 
         if not matching:
             return None

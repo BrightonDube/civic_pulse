@@ -242,56 +242,53 @@ export async function getStatuses(): Promise<string[]> {
 
 
 // Notification API
-export const getNotifications = async () => {
-  const response = await http.get("/api/notifications/");
-  return response.data;
-};
+export async function getNotifications(): Promise<any[]> {
+  return request<any[]>("/api/notifications/");
+}
 
-export const getUnreadCount = async () => {
-  const response = await http.get("/api/notifications/unread/count");
-  return response.data;
-};
+export async function getUnreadCount(): Promise<{ count: number }> {
+  return request<{ count: number }>("/api/notifications/unread/count");
+}
 
-export const markNotificationsRead = async (notificationIds: string[]) => {
-  const response = await http.post("/api/notifications/mark-read", {
-    notification_ids: notificationIds,
+export async function markNotificationsRead(notificationIds: string[]): Promise<any> {
+  return request<any>("/api/notifications/mark-read", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ notification_ids: notificationIds }),
   });
-  return response.data;
-};
+}
 
-export const markAllNotificationsRead = async () => {
-  const response = await http.post("/api/notifications/mark-all-read");
-  return response.data;
-};
+export async function markAllNotificationsRead(): Promise<any> {
+  return request<any>("/api/notifications/mark-all-read", { method: "POST" });
+}
 
-export const deleteNotification = async (notificationId: string) => {
-  const response = await http.delete(`/api/notifications/${notificationId}`);
-  return response.data;
-};
+export async function deleteNotification(notificationId: string): Promise<any> {
+  return request<any>(`/api/notifications/${notificationId}`, { method: "DELETE" });
+}
 
 
 // User Management API (Admin)
-export const listUsers = async (params: Record<string, any> = {}) => {
-  const response = await http.get("/api/admin/users/", { params });
-  return response.data;
-};
+export async function listUsers(params: Record<string, any> = {}): Promise<any> {
+  const query = Object.keys(params).length ? "?" + new URLSearchParams(params).toString() : "";
+  return request<any>(`/api/admin/users/${query}`);
+}
 
-export const getUserStats = async () => {
-  const response = await http.get("/api/admin/users/stats/summary");
-  return response.data;
-};
+export async function getUserStats(): Promise<any> {
+  return request<any>("/api/admin/users/stats/summary");
+}
 
-export const updateUserRole = async (userId: string, role: string) => {
-  const response = await http.patch(`/api/admin/users/${userId}/role`, { role });
-  return response.data;
-};
+export async function updateUserRole(userId: string, role: string): Promise<any> {
+  return request<any>(`/api/admin/users/${userId}/role`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  });
+}
 
-export const verifyUserEmail = async (userId: string) => {
-  const response = await http.patch(`/api/admin/users/${userId}/verify`);
-  return response.data;
-};
+export async function verifyUserEmail(userId: string): Promise<any> {
+  return request<any>(`/api/admin/users/${userId}/verify`, { method: "PATCH" });
+}
 
-export const deleteUser = async (userId: string) => {
-  const response = await http.delete(`/api/admin/users/${userId}`);
-  return response.data;
-};
+export async function deleteUser(userId: string): Promise<any> {
+  return request<any>(`/api/admin/users/${userId}`, { method: "DELETE" });
+}
