@@ -1,7 +1,7 @@
 """
 Admin service for report management operations.
 
-Requirements: 9.2, 9.3, 9.4, 9.5, 9.6, 9.7
+Requirements: 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 4.3, 17.2
 """
 import uuid
 from datetime import datetime, timezone
@@ -13,6 +13,7 @@ from app.models.report import Report, VALID_CATEGORIES, VALID_STATUSES
 from app.models.admin_note import AdminNote
 from app.models.audit_log import AuditLog
 from app.models.status_history import StatusHistory
+from app.models.notification import Notification
 from app.services.report_service import ReportService
 
 
@@ -40,13 +41,39 @@ class AdminService:
         self, report_id: uuid.UUID, status: str, admin_id: uuid.UUID
     ) -> Optional[Report]:
         """
-        Update report status with audit logging.
+        Update report status with audit logging and notifications.
         Property 29: Admin Override Capabilities
-        Requirements: 9.2
+        Requirements: 9.2, 4.3, 17.2
         """
         report = self.report_service.update_status(report_id, status, admin_id)
         if report:
             self._log_audit(report_id, admin_id, "status_update", f"Changed to {status}")
+            
+            # Create notification for report submitter
+            notification = Notification(
+                user_id=report.user_id,
+                report_id=report_id,
+                type="status_change",
+                title="Report Status Updated",
+                message=f"Your report status has been changed to: {status}",
+                read=False,
+            )
+            self.db.add(notification)
+            
+            # Create notifications for upvoters
+            upvoters = self.report_service.get_upvoters(report_id)
+            for upvote in upvoters:
+                if upvote.user_id != report.user_id:  # Don't duplicate notification for submitter
+                    upvoter_notification = Notification(
+                        user_id=upvote.user_id,
+                        report_id=report_id,
+                        type="status_change",
+                        title="Upvoted Report Updated",
+                        message=f"A report you upvoted has been updated to: {status}",
+                        read=False,
+                    )
+                    self.db.add(upvoter_notification)
+            
             self.db.commit()
         return report
 

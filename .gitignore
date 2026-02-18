@@ -60,12 +60,10 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-*.db
 
 # Flask stuff:
 instance/
 .webassets-cache
-.kiro
 
 # Scrapy stuff:
 .scrapy
@@ -83,7 +81,6 @@ target/
 # IPython
 profile_default/
 ipython_config.py
-.vscode
 
 # pyenv
 #   For a library or package, you might want to ignore these files since the code is
@@ -209,26 +206,9 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Upload files from tests
-backend/uploads/
-uploads/
-
 # ------------------------------------------------------------
 # Project rules
 # ------------------------------------------------------------
-
-# Documentation folder (keep only README.md in root)
-docs/
-scripts/
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Config examples (keep .txt versions in docs)
-.eslintrc.cjs.txt
-.prettierrc.txt
 
 # Never commit Markdown docs (except README.md)
 *.md
@@ -271,5 +251,5 @@ out/
 *.pfx
 id_rsa
 id_rsa.pub
-project-submission-worksheet.docx
-project-plan.docx
+backend/uploads/63a1ca0a-83bc-4aa1-a45d-e54240908474.jpg
+backend/uploads/e36805a4-b6db-48f8-899d-d7a3cd7207d9.jpg

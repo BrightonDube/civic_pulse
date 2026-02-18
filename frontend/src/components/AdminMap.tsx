@@ -78,6 +78,12 @@ export const AdminMap = ({ filters, externalReports }: Props) => {
         <ReportDetailModal
           report={selectedReport}
           onClose={() => setSelectedReport(null)}
+          onUpdate={(updatedReport) => {
+            setReports((prev) =>
+              prev.map((r) => (r.id === updatedReport.id ? updatedReport : r))
+            );
+            setSelectedReport(updatedReport);
+          }}
         />
       )}
     </>

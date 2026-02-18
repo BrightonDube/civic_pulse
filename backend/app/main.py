@@ -8,9 +8,11 @@ from slowapi.errors import RateLimitExceeded
 from app.api.auth import router as auth_router
 from app.api.reports import router as reports_router
 from app.api.admin import router as admin_router
+from app.api.users import router as users_router
 from app.api.leaderboard import router as leaderboard_router
 from app.api.ws import router as ws_router
 from app.api.analytics import router as analytics_router
+from app.api.notifications import router as notifications_router
 from app.api.routes.config import router as config_router
 from app.core.database import engine, Base
 import app.models  # ensure all models are loaded
@@ -38,9 +40,11 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(reports_router)
 app.include_router(admin_router)
+app.include_router(users_router)
 app.include_router(leaderboard_router)
 app.include_router(ws_router)
 app.include_router(analytics_router)
+app.include_router(notifications_router)
 app.include_router(config_router)
 
 # Create database tables on startup

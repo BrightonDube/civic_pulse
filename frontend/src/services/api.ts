@@ -239,3 +239,59 @@ export async function getStatuses(): Promise<string[]> {
   const res = await request<{ statuses: string[] }>("/api/config/statuses");
   return res.statuses;
 }
+
+
+// Notification API
+export const getNotifications = async () => {
+  const response = await http.get("/api/notifications/");
+  return response.data;
+};
+
+export const getUnreadCount = async () => {
+  const response = await http.get("/api/notifications/unread/count");
+  return response.data;
+};
+
+export const markNotificationsRead = async (notificationIds: string[]) => {
+  const response = await http.post("/api/notifications/mark-read", {
+    notification_ids: notificationIds,
+  });
+  return response.data;
+};
+
+export const markAllNotificationsRead = async () => {
+  const response = await http.post("/api/notifications/mark-all-read");
+  return response.data;
+};
+
+export const deleteNotification = async (notificationId: string) => {
+  const response = await http.delete(`/api/notifications/${notificationId}`);
+  return response.data;
+};
+
+
+// User Management API (Admin)
+export const listUsers = async (params: Record<string, any> = {}) => {
+  const response = await http.get("/api/admin/users/", { params });
+  return response.data;
+};
+
+export const getUserStats = async () => {
+  const response = await http.get("/api/admin/users/stats/summary");
+  return response.data;
+};
+
+export const updateUserRole = async (userId: string, role: string) => {
+  const response = await http.patch(`/api/admin/users/${userId}/role`, { role });
+  return response.data;
+};
+
+export const verifyUserEmail = async (userId: string) => {
+  const response = await http.patch(`/api/admin/users/${userId}/verify`);
+  return response.data;
+};
+
+export const deleteUser = async (userId: string) => {
+  const response = await http.delete(`/api/admin/users/${userId}`);
+  return response.data;
+};

@@ -36,11 +36,13 @@ export const ReportDetailModal = ({ report, onClose, onUpdate }: Props) => {
   };
 
   const handleStatusUpdate = async () => {
+    if (newStatus === current.status) return;
     try {
       const updated = await adminUpdateStatus(current.id, newStatus);
       setCurrent(updated);
       onUpdate?.(updated);
-      setMessage("Status updated");
+      setMessage("Status updated successfully");
+      setTimeout(() => setMessage(null), 3000);
     } catch (err: unknown) {
       setMessage(err instanceof Error ? err.message : "Update failed");
     }

@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
+import { NotificationBell } from "./NotificationBell";
 
 export const Navbar = () => {
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
@@ -31,7 +32,9 @@ export const Navbar = () => {
                 <NavLink to="/settings">Settings</NavLink>
                 {isAdmin && <NavLink to="/admin">Admin</NavLink>}
                 {isAdmin && <NavLink to="/analytics">Analytics</NavLink>}
+                {isAdmin && <NavLink to="/users">Users</NavLink>}
                 <div className="ml-3 pl-3 border-l border-white/20 flex items-center gap-3">
+                  <NotificationBell />
                   <span className="text-blue-200 text-sm truncate max-w-[160px]">{user?.email}</span>
                   <button
                     onClick={handleLogout}
@@ -82,6 +85,7 @@ export const Navbar = () => {
                 <MobileNavLink to="/settings" onClick={() => setMobileOpen(false)}>Settings</MobileNavLink>
                 {isAdmin && <MobileNavLink to="/admin" onClick={() => setMobileOpen(false)}>Admin</MobileNavLink>}
                 {isAdmin && <MobileNavLink to="/analytics" onClick={() => setMobileOpen(false)}>Analytics</MobileNavLink>}
+                {isAdmin && <MobileNavLink to="/users" onClick={() => setMobileOpen(false)}>Users</MobileNavLink>}
                 <div className="pt-2 mt-2 border-t border-white/10">
                   <p className="text-blue-200 text-sm px-3 py-1">{user?.email}</p>
                   <button
