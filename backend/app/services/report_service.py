@@ -41,6 +41,7 @@ class ReportService:
         severity_score: int = 5,
         ai_generated: bool = False,
         additional_photos: Optional[List[bytes]] = None,
+        image_hash: Optional[str] = None,
     ) -> Report:
         """
         Create a new report. Sets initial status to 'Reported'.
@@ -78,6 +79,7 @@ class ReportService:
         report = Report(
             user_id=user_id,
             photo_url=photo_url,
+            image_hash=image_hash,
             latitude=latitude,
             longitude=longitude,
             category=category,

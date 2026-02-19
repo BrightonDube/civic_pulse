@@ -1,14 +1,16 @@
 """
-Duplicate detection service using spatial search.
+Duplicate detection service using spatial search and image hashing.
 
 Uses Haversine formula for distance calculation (SQLite compatible).
 For PostgreSQL+PostGIS, this would use ST_DWithin.
+Uses SHA-256 hashing for exact image duplicate detection.
 
 Requirements: 5.1, 5.2
 """
+import hashlib
 import math
 import uuid
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from sqlalchemy.orm import Session
 
@@ -24,6 +26,36 @@ class DuplicateDetectionService:
 
     def __init__(self, db: Session):
         self.db = db
+
+    @staticmethod
+    def compute_image_hash(photo_bytes: bytes) -> str:
+        """
+        Compute SHA-256 hash of image bytes for duplicate detection.
+        Returns hex string of the hash.
+        """
+        return hashlib.sha256(photo_bytes).hexdigest()
+
+    def check_image_duplicate(
+        self, photo_bytes: bytes, user_id: uuid.UUID
+    ) -> Optional[Report]:
+        """
+        Check if the exact same image has already been submitted by this user.
+        This check happens BEFORE AI analysis to save tokens.
+        Returns the existing report if duplicate found, None otherwise.
+        """
+        image_hash = self.compute_image_hash(photo_bytes)
+        
+        existing = (
+            self.db.query(Report)
+            .filter(
+                Report.user_id == user_id,
+                Report.image_hash == image_hash,
+                Report.archived == False,
+            )
+            .first()
+        )
+        
+        return existing
 
     @staticmethod
     def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

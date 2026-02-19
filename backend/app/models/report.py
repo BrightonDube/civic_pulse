@@ -32,6 +32,7 @@ class Report(Base):
     id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     user_id = Column(GUID(), ForeignKey("users.id"), nullable=False)
     photo_url = Column(String, nullable=False)
+    image_hash = Column(String(64), nullable=True, index=True)  # SHA-256 hash for duplicate detection
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
     category = Column(String, nullable=False, default="Other")

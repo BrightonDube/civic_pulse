@@ -107,25 +107,36 @@ async def create_report(
     if not (-90 <= latitude <= 90) or not (-180 <= longitude <= 180):
         raise HTTPException(status_code=400, detail="Invalid GPS coordinates")
 
-    # AI analysis (Req 2.1, 2.5)
+    # DUPLICATE CHECK FIRST - before AI analysis to save tokens (Req 5.1, 5.2)
+    dup_service = DuplicateDetectionService(db)
+    
+    # Check for exact image duplicate from same user
+    image_duplicate = dup_service.check_image_duplicate(photo_bytes, current_user.id)
+    if image_duplicate:
+        logger.info(f"Duplicate image detected for user {current_user.id}, returning existing report {image_duplicate.id}")
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "message": "You have already reported this issue. Please wait for the outcome.",
+                "existing_report_id": str(image_duplicate.id),
+                "existing_report_status": image_duplicate.status,
+                "created_at": image_duplicate.created_at.isoformat(),
+            }
+        )
+
+    # Compute image hash for storage (will be saved with report)
+    image_hash = dup_service.compute_image_hash(photo_bytes)
+
+    # AI analysis (Req 2.1, 2.5) - only after duplicate check passes
     ai_service = AIService()
+    logger.info(f"Sending image to AI for analysis (hash: {image_hash[:16]}...)")
     analysis = ai_service.analyze_image(photo_bytes)
+    logger.info(f"AI analysis result: category={analysis.category}, severity={analysis.severity_score}, ai_generated={analysis.ai_generated}")
 
     # User override takes priority (Req 2.6)
     category = user_override_category or analysis.category
     severity_score = analysis.severity_score
     ai_generated = analysis.ai_generated and (user_override_category is None)
-
-    # Duplicate detection (Req 5.1, 5.2)
-    # Only check for duplicates from the SAME user to prevent accidental re-submissions
-    # Don't block users from reporting the same issue - multiple reports help prioritize
-    dup_service = DuplicateDetectionService(db)
-    duplicate = dup_service.check_for_duplicates(
-        latitude, longitude, category, user_id=current_user.id
-    )
-    if duplicate:
-        # Return existing report only if it belongs to the same user (prevents double-submission)
-        return _report_to_response(duplicate)
 
     service = ReportService(db)
     try:
@@ -139,6 +150,7 @@ async def create_report(
             severity_score=severity_score,
             ai_generated=ai_generated,
             additional_photos=additional_photo_bytes if additional_photo_bytes else None,
+            image_hash=image_hash,
         )
         logger.info(f"Report created successfully: {report.id}")
     except ValueError as e:
