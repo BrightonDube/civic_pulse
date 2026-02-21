@@ -213,6 +213,7 @@ __marimo__/
 # Never commit Markdown docs (except README.md)
 *.md
 !README.md
+!docs/*.md
 
 # ------------------------------------------------------------
 # Frontend (React/TypeScript) common ignores
@@ -255,3 +256,13 @@ backend/uploads/63a1ca0a-83bc-4aa1-a45d-e54240908474.jpg
 backend/uploads/e36805a4-b6db-48f8-899d-d7a3cd7207d9.jpg
 backend/civicpulse_dev.db
 backend/civicpulse_dev.db
+
+# Uploads directory
+backend/uploads/
+uploads/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+civicpulse_dev.db

@@ -114,13 +114,31 @@ async def create_report(
     image_duplicate = dup_service.check_image_duplicate(photo_bytes, current_user.id)
     if image_duplicate:
         logger.info(f"Duplicate image detected for user {current_user.id}, returning existing report {image_duplicate.id}")
+        
+        # Format status for user-friendly display
+        status_display = {
+            "Reported": "pending review",
+            "In Progress": "being worked on",
+            "Fixed": "resolved"
+        }.get(image_duplicate.status, image_duplicate.status.lower())
+        
+        # Calculate days since submission
+        from datetime import datetime, timezone
+        days_ago = (datetime.now(timezone.utc) - image_duplicate.created_at).days
+        time_display = f"{days_ago} day{'s' if days_ago != 1 else ''} ago" if days_ago > 0 else "today"
+        
         raise HTTPException(
             status_code=409,
             detail={
-                "message": "You have already reported this issue. Please wait for the outcome.",
+                "message": f"You've already reported this issue! Your report from {time_display} is currently {status_display}. "
+                          f"We'll notify you when the status changes. Thank you for helping improve our community!",
+                "user_friendly_message": f"Duplicate Report Detected",
                 "existing_report_id": str(image_duplicate.id),
                 "existing_report_status": image_duplicate.status,
+                "status_display": status_display,
                 "created_at": image_duplicate.created_at.isoformat(),
+                "days_ago": days_ago,
+                "action_hint": "You can view your existing report in 'My Reports' or upvote similar reports from other users."
             }
         )
 

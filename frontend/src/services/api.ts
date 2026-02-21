@@ -73,6 +73,15 @@ export async function createReport(formData: FormData): Promise<Report> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: res.statusText }));
+    
+    // Handle duplicate report (409 Conflict) with enhanced error message
+    if (res.status === 409 && typeof body.detail === 'object') {
+      const detail = body.detail;
+      // Use the user-friendly message from the backend
+      const message = detail.message || detail.user_friendly_message || "Duplicate report detected";
+      throw new Error(message);
+    }
+    
     throw new Error(body.detail || res.statusText);
   }
   return res.json();
